@@ -1,0 +1,17 @@
+{
+  "backend": "postgresql",
+  "database_version": "PostgreSQL 17.6 on x86_64-windows, compiled by msvc-19.44.35213, 64-bit",
+  "source_rows": 270,
+  "loaded_rows": 270,
+  "rows_after_repeat_load": 270,
+  "idempotent": true,
+  "database_values_match_source": true,
+  "dashboard_rows": 90,
+  "countries": 6,
+  "indicators": 3,
+  "years": [
+    2010,
+    2024
+  ],
+  "missing_values": 0
+}

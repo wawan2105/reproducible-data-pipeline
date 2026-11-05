@@ -1,0 +1,26 @@
+{
+  "rows": 270,
+  "countries": [
+    "IDN",
+    "MYS",
+    "PHL",
+    "SGP",
+    "THA",
+    "VNM"
+  ],
+  "indicators": [
+    "FP.CPI.TOTL.ZG",
+    "NY.GDP.PCAP.CD",
+    "SP.POP.TOTL"
+  ],
+  "missing_values": 0,
+  "duplicate_keys": 0,
+  "api_metadata": {
+    "page": 1,
+    "pages": 1,
+    "per_page": 20000,
+    "total": 270,
+    "sourceid": null,
+    "lastupdated": "2026-10-08"
+  }
+}

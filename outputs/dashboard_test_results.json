@@ -1,0 +1,11 @@
+{
+  "dashboard": "reproducible-data-pipeline",
+  "passed": true,
+  "checks": [
+    "initial render",
+    "country selector",
+    "indicator selector",
+    "15-year table values",
+    "download widget"
+  ]
+}

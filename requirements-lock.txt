@@ -1,0 +1,9 @@
+numpy==1.26.4
+pandas==2.2.3
+sqlalchemy==2.1.8
+psycopg==3.3.8
+psycopg-binary==3.3.8
+matplotlib==3.10.3
+streamlit==1.66.1
+pyarrow==19.0.1
+nbformat==5.10.4

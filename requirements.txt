@@ -1,0 +1,9 @@
+numpy
+pandas
+sqlalchemy
+psycopg
+psycopg-binary
+matplotlib
+streamlit
+nbformat
+pyarrow==19.0.1
