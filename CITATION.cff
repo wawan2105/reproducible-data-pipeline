@@ -1,0 +1,12 @@
+cff-version: 1.2.0
+message: "Cite this portfolio project and separately credit the original data providers listed in THIRD_PARTY_DATA.md."
+title: "Reproducible Economic Data Pipeline"
+type: software
+authors:
+  - family-names: "Saputra"
+    given-names: "Wawan"
+repository-code: "https://github.com/wawan2105/reproducible-data-pipeline"
+keywords:
+  - statistics
+  - reproducible-research
+  - data-science

@@ -1,82 +1,74 @@
-# Automated Analytics Pipeline: Raw Data to PostgreSQL and Dashboard
+# Reproducible Economic Data Pipeline
 
-**Wawan Saputra | Independent Portfolio Project | 2026 | Project 6/8**
+**Wawan Saputra · Analytics Engineering & SQL · 2026**
 
-## Overview
-Project terimplementasi dengan data publik, kode analisis yang dapat dijalankan, notebook, tabel dan grafik hasil eksekusi aktual. Tidak menggunakan hasil numerik sintetis.
+Turn a cached World Bank API snapshot into validated relational data, analytical SQL outputs and an interactive dashboard. PostgreSQL is the primary backend; SQLite supports a portable local demonstration.
 
-## Research / Business Question
-Bagaimana membangun pipeline data ekonomi yang tervalidasi, idempotent, dan menghasilkan tabel analitik yang siap dipakai dashboard?
+[Executive summary](outputs/executive_summary.md) · [SQL queries](sql) · [Notebook walkthroughs](notebooks) · [Data attribution](THIRD_PARTY_DATA.md)
 
-## Dataset
-World Bank WDI: 6 negara Asia Tenggara × 3 indikator × 15 tahun 2010–2024 = 270 observasi. Indikator GDP per capita nominal current US$, inflasi annual %, dan populasi.
+## Verified outcome
 
-Sumber: [dokumentasi sumber](https://datahelpdesk.worldbank.org/knowledgebase/articles/898581). URL unduhan, waktu pengambilan UTC, ukuran dan SHA-256 tersedia pada `data/source_manifest.json`. Snapshot sumber disimpan di `data/raw/`, sehingga rerun analisis menggunakan data yang sama. Atribusi dan batas penggunaan tercantum di [THIRD_PARTY_DATA.md](THIRD_PARTY_DATA.md).
+| Execution check | Result |
+|---|---:|
+| Source observations | 270 |
+| Coverage | 6 countries × 3 indicators × 15 years |
+| PostgreSQL rows after initial/repeated load | 270 / 270 |
+| Analytical country-year records | 90 |
+| Exact source/database value roundtrip | Passed |
+| Tested primary backend | PostgreSQL 17.6 |
 
-## Methods
-API JSON snapshot, checksum manifest, domain/key validation, SQLAlchemy normalized relational schema, PostgreSQL foreign keys/composite PK, transactional upserts, repeat-load idempotency, database value roundtrip, conditional SQL pivot dan window LAG, Streamlit dashboard.
+![Dashboard preview](outputs/figures/dashboard_screenshot.png)
 
-## Scope and Assumptions
-PostgreSQL adalah backend utama dan telah diuji pada database lokal. SQLite tersedia secara eksplisit untuk penggunaan portable. Refresh dijalankan secara manual melalui --refresh; project tidak memasang jadwal otomatis. Dataset latest-vintage bukan arsip vintage historis.
+## Data and analytical question
 
-## Workflow
-1. Baca atau unduh snapshot sumber; verifikasi checksum dan validasi data.
-2. Bentuk dataset analisis dengan aturan yang terdokumentasi.
-3. Jalankan metode statistik/model sesuai desain studi.
-4. Simpan hasil, diagnostik, visualisasi dan ringkasan interpretasi.
+Produce consistent 2010–2024 country-year indicators for Indonesia, Malaysia, Thailand, Vietnam, the Philippines and Singapore. Indicators: GDP per capita (**current US$**), consumer-price inflation (**annual %**) and population (**persons**).
 
-## Key Results and Interpretation
-Lihat [executive summary](outputs/executive_summary.md) untuk hasil aktual, interpretasi, rekomendasi, limitations, dan dua bullet CV. Hasil terstruktur tersedia di [metrics.json](outputs/metrics.json), dengan tabel pendukung di `outputs/tables/`. Angka README tidak digandakan agar tidak tertinggal dari hasil rerun.
+Nominal GDP per capita is not adjusted for purchasing power or inflation. Missing observations remain NULL; none occur in the checked-in snapshot. These are historical descriptive indicators, not forecasts or a causal comparison. Source JSON, checksums and indicator-level [CC BY 4.0 attribution](THIRD_PARTY_DATA.md) are retained.
 
-## Visualizations
-![Hasil utama](outputs/figures/dashboard_preview.png)
+## Architecture
 
-## Reproducibility
-Python 3.11 diuji. Jalankan perintah berikut dari folder project. `requirements-lock.txt` mencatat versi paket yang benar-benar digunakan; `requirements.txt` adalah daftar dependensi langsung. Gunakan environment terpisah untuk setiap project.
+```mermaid
+flowchart LR
+    A[World Bank API / cached JSON] --> B[Key, coverage and domain checks]
+    B --> C[Transactional SQLAlchemy upserts]
+    C --> D[(PostgreSQL)]
+    D --> E[SQL pivot and LAG queries]
+    E --> F[CSV and Streamlit dashboard]
+```
+
+Country and indicator dimension tables link to an observation fact table with a composite primary key. Validation runs before writes; a transaction prevents partial loads. Foreign keys enforce references. Repeated loads update existing keys rather than append duplicates. Integration results include a direct PostgreSQL run; unit tests also exercise rejection, rollback and idempotency in SQLite.
+
+## Quick start without a server
+
+Python 3.11 was tested. From this repository:
 
 ```powershell
 python -m venv .venv
 .\.venv\Scripts\python.exe -m pip install -r requirements-lock.txt
+.\.venv\Scripts\python.exe -m src.run --backend sqlite
+.\.venv\Scripts\python.exe -m unittest discover -s tests -v
+.\.venv\Scripts\python.exe -m streamlit run app.py
+```
+
+Linux/macOS: use `.venv/bin/python`. The dashboard can also read the committed analytical CSV without running a database. A SQLite rerun records its own backend in the generated report; the original PostgreSQL verification remains recorded in the publication audit.
+
+## Primary PostgreSQL setup
+
+Requires Docker with Compose, or an existing PostgreSQL server:
+
+```powershell
 Copy-Item .env.example .env
-# Edit .env: set a local password and use the same password in DATABASE_URL.
+# Edit .env: choose a password and use it in both settings.
 docker compose up -d --wait
 .\.venv\Scripts\python.exe -m src.run
-.\.venv\Scripts\python.exe -m unittest discover -s tests -v
 ```
 
-Alternatif portable tanpa server: `python -m src.run --backend sqlite`. PostgreSQL tetap backend utama. Refresh sumber: `python -m src.run --refresh`. `docker compose stop` menghentikan server tanpa menghapus volume. Kredensial lokal `.env` tidak disertakan dalam arsip atau Git.
+The Compose service binds to `127.0.0.1:55432`. For an existing server set `DATABASE_URL` in the environment or ignored `.env`. Keep credentials local. `docker compose stop` preserves the database volume. Machine-specific helper scripts in `scripts/` only work where the sibling local testing runtime exists; portable setup does not depend on it.
 
+## Refresh and outputs
 
-Dashboard: `python -m streamlit run app.py`. Jalankan dari folder project. 
-Untuk membuka notebook: instal `jupyterlab ipykernel`, lalu `python -m jupyterlab`. Notebook EDA, modeling dan reporting membaca snapshot/hasil yang disimpan. Notebook modeling menjelaskan dan menyediakan perintah rerun analisis; tidak melatih ulang secara tersembunyi ketika sekadar melihat hasil. Seluruh notebook telah dieksekusi untuk pemeriksaan.
-
-## Repository Structure
-```text
-reproducible-data-pipeline/
-├── README.md
-├── THIRD_PARTY_DATA.md
-├── data/                 # raw, processed, source manifest
-├── notebooks/            # EDA, modeling, interpretation
-├── src/                  # reusable analysis functions and CLI
-├── tests/                # meaningful integrity and statistical checks
-├── outputs/
-│   ├── figures/
-│   ├── tables/
-│   ├── metrics.json
-│   ├── environment.json
-│   └── executive_summary.md
-├── requirements.txt
-└── requirements-lock.txt
-```
+`python -m src.run --refresh` explicitly fetches, validates and replaces the cached snapshot before loading. No recurring scheduler is installed. `sql/country_year.sql` uses conditional aggregation; `sql/year_on_year.sql` uses window `LAG` for GDP/population growth. Outputs include audit metadata, SQL schema, logs, charts and dashboard-ready CSVs. Logs and databases are ignored by Git.
 
 ## Limitations and Future Work
-PostgreSQL adalah backend utama dan telah diuji pada database lokal. SQLite tersedia secara eksplisit untuk penggunaan portable. Refresh dijalankan secara manual melalui --refresh; project tidak memasang jadwal otomatis. Dataset latest-vintage bukan arsip vintage historis.
 
-Batasan spesifik dan rencana pengembangan dibahas dalam executive summary. Hasil adalah portfolio riset terapan yang bergantung pada dataset dan asumsi; tidak menggantikan validasi lapangan atau penerapan produksi.
-
-## Author
-Wawan Saputra
-
-## Runtime lokal pada komputer ini
-
-Runtime PostgreSQL pengujian tersimpan di folder pendukung `../portfolio-build-tools/`. Mulai dengan `powershell -ExecutionPolicy Bypass -File scripts/start_local_database.ps1`, lalu `python -m src.run`. Hentikan dengan script `scripts/stop_local_database.ps1`. Runtime dan kredensial lokal tidak dibundel dalam ZIP; pada komputer lain gunakan Docker Compose atau SQLite sesuai instruksi di atas.
+Latest-vintage source revisions; fixed selected coverage; no immutable vintage history, migration framework, orchestration or freshness alerting. Direct package versions are pinned, not every transitive dependency. Future work: schema migrations, source-version history, scheduled integration checks and validation of newly added indicators/countries.

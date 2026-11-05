@@ -1,0 +1,9 @@
+test_duplicate_and_domain_rejection (test_integrity.DatabaseIntegrity.test_duplicate_and_domain_rejection) ... ok
+test_transactional_load_idempotency_and_foreign_keys (test_integrity.DatabaseIntegrity.test_transactional_load_idempotency_and_foreign_keys) ... ok
+test_actual_results_and_reports_exist (test_integrity.SourceIntegrity.test_actual_results_and_reports_exist) ... ok
+test_snapshot_checksums (test_integrity.SourceIntegrity.test_snapshot_checksums) ... ok
+
+----------------------------------------------------------------------
+Ran 4 tests in 0.124s
+
+OK
